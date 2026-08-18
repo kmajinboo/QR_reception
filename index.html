@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <base target="_top">
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>はなせるパントリー 受付システム</title>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -18,39 +19,21 @@
       color: #1F3864;
       margin-bottom: 8px;
     }
-    .device-badge {
-      text-align: center;
-      margin-bottom: 16px;
-    }
+    .device-badge { text-align: center; margin-bottom: 16px; }
     .device-badge span {
-      display: inline-block;
-      background: #1F3864;
-      color: white;
-      padding: 6px 16px;
-      border-radius: 20px;
-      font-size: 14px;
-      font-weight: bold;
+      display: inline-block; background: #1F3864; color: white;
+      padding: 6px 16px; border-radius: 20px; font-size: 14px; font-weight: bold;
     }
     .progress-bar-container {
-      background: #ddd;
-      border-radius: 20px;
-      height: 24px;
-      margin-bottom: 16px;
-      overflow: hidden;
-      position: relative;
+      background: #ddd; border-radius: 20px; height: 24px;
+      margin-bottom: 16px; overflow: hidden; position: relative;
     }
-    .progress-bar-fill {
-      background: #2E7D32;
-      height: 100%;
-      transition: width 0.3s;
-    }
+    .progress-bar-fill { background: #2E7D32; height: 100%; transition: width 0.3s; }
     .progress-text {
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
+      position: absolute; top:0; left:0; right:0; bottom:0;
       display: flex; align-items: center; justify-content: center;
       font-size: 13px; font-weight: bold; color: #222;
     }
-
     .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
     .tab-btn {
       flex: 1; padding: 12px; border: none; border-radius: 8px;
@@ -59,12 +42,10 @@
     .tab-btn.active { background: #4472C4; color: white; }
     .panel { display: none; }
     .panel.active { display: block; }
-
     #reader {
       width: 100%; max-width: 400px; margin: 0 auto;
       border-radius: 12px; overflow: hidden; border: 2px solid #4472C4;
     }
-
     .search-box {
       width: 100%; padding: 14px; font-size: 18px;
       border: 2px solid #4472C4; border-radius: 8px; margin-bottom: 12px;
@@ -77,7 +58,6 @@
     .btn.confirm { background: #2E7D32; }
     .btn.warn { background: #CC4400; }
     .btn:disabled { background: #aaa; }
-
     .result-card {
       background: white; border-radius: 12px; padding: 20px; margin-top: 16px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: none;
@@ -96,31 +76,25 @@
     }
     .status-badge.received { background: #2E7D32; }
     .status-badge.notyet { background: #CC4400; }
-
     .message { text-align: center; padding: 20px; font-size: 16px; color: #CC4400; font-weight: bold; }
     .conflict-message {
       background: #FFF3E0; border: 2px solid #CC4400; border-radius: 8px;
       padding: 14px; margin-top: 12px; font-size: 14px; font-weight: bold; color: #CC4400;
     }
-
     .name-results { margin-top: 12px; }
     .name-result-item {
       background: white; border-radius: 8px; padding: 12px; margin-bottom: 8px;
       box-shadow: 0 1px 4px rgba(0,0,0,0.08); cursor: pointer;
     }
     .name-result-item:active { background: #eef4ff; }
-
-    /* 起動時の端末名入力オーバーレイ */
     #setup-overlay {
       position: fixed; top:0; left:0; right:0; bottom:0;
       background: rgba(0,0,0,0.6);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 999;
+      display: flex; align-items: center; justify-content: center; z-index: 999;
     }
     #setup-overlay.hidden { display: none; }
     .setup-card {
-      background: white; border-radius: 16px; padding: 28px; width: 85%; max-width: 360px;
-      text-align: center;
+      background: white; border-radius: 16px; padding: 28px; width: 85%; max-width: 360px; text-align: center;
     }
     .setup-card h2 { font-size: 18px; color: #1F3864; margin-top: 0; }
     .setup-card input {
@@ -132,11 +106,19 @@
       flex: 1; padding: 10px; border: 2px solid #4472C4; background: white;
       color: #4472C4; border-radius: 8px; font-weight: bold; cursor: pointer;
     }
+    #config-warning {
+      background: #FFF3E0; border: 2px solid #CC4400; color: #CC4400;
+      padding: 12px; border-radius: 8px; margin-bottom: 12px; font-size: 13px; display: none;
+    }
   </style>
 </head>
 <body>
 
-  <!-- 起動時：端末名（担当レーン）を入力 -->
+  <div id="config-warning">
+    ⚠️ WEB_APP_URLが設定されていません。このファイル内の
+    <code>const WEB_APP_URL = '...'</code> に、Apps ScriptのデプロイURL（/execで終わるもの）を設定してください。
+  </div>
+
   <div id="setup-overlay">
     <div class="setup-card">
       <h2>受付端末の設定</h2>
@@ -193,10 +175,41 @@
 
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script>
+    // ============================================================
+    // ★★★ 必ず設定してください ★★★
+    // Apps Scriptの「デプロイ」→「デプロイを管理」で発行された
+    // ウェブアプリのURL（/exec で終わるもの）をここに貼り付けてください。
+    // ============================================================
+    const WEB_APP_URL = 'https://script.google.com/a/macros/willwork.jp/s/AKfycbwXl5IWu4_KlrAEBzsYa3IKaVUrB3QDII5iCewSaUbo6554XCy8y6_Ztz42ibn5z8goiw/exec';
+    // ============================================================
+
     let currentRowIndex = null;
     let html5QrCode = null;
     let scanning = false;
     let deviceName = '';
+
+    // 設定チェック
+    if (!WEB_APP_URL || WEB_APP_URL.indexOf('ここに') === 0 || WEB_APP_URL.indexOf('script.google.com') === -1) {
+      document.getElementById('config-warning').style.display = 'block';
+    }
+
+    // ---- APIリクエスト共通関数（fetchベース） ----
+    async function callApi(action, params) {
+      const url = new URL(WEB_APP_URL);
+      url.searchParams.set('action', action);
+      Object.keys(params || {}).forEach(key => {
+        url.searchParams.set(key, params[key]);
+      });
+      const res = await fetch(url.toString());
+      if (!res.ok) {
+        throw new Error('サーバーエラー（HTTP ' + res.status + '）');
+      }
+      const data = await res.json();
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      return data;
+    }
 
     // ---- 起動時：端末名の設定 ----
     function setDeviceName(name) {
@@ -205,23 +218,18 @@
 
     function confirmDeviceName() {
       const input = document.getElementById('device-name-input').value.trim();
-      if (!input) {
-        alert('端末名を選択または入力してください');
-        return;
-      }
+      if (!input) { alert('端末名を選択または入力してください'); return; }
       deviceName = input;
-      // セッション内で記憶（同端末のブラウザを閉じても再利用したい場合はlocalStorageを使うが、
-      // 今回は明示的に毎回選ばせる方が受付ミスを防げるため保存しない）
       document.getElementById('device-label').innerText = '担当：' + deviceName;
       document.getElementById('setup-overlay').classList.add('hidden');
       startScanner();
       refreshProgress();
-      setInterval(refreshProgress, 15000); // 15秒ごとに進捗を自動更新
+      setInterval(refreshProgress, 15000);
     }
 
     // ---- 進捗表示 ----
     function refreshProgress() {
-      google.script.run.withSuccessHandler(showProgress).withFailureHandler(()=>{}).getProgress();
+      callApi('progress').then(showProgress).catch(() => {});
     }
     function showProgress(p) {
       const pct = p.total > 0 ? Math.round((p.received / p.total) * 100) : 0;
@@ -245,7 +253,6 @@
       if (scanning) return;
       html5QrCode = new Html5Qrcode("reader");
       const config = { fps: 10, qrbox: { width: 250, height: 250 } };
-
       Html5Qrcode.getCameras().then(cameras => {
         if (cameras && cameras.length) {
           const backCamera = cameras.find(c => /back|rear/i.test(c.label)) || cameras[cameras.length - 1];
@@ -272,14 +279,19 @@
     }
     function onScanFailure(error) { /* 無視 */ }
 
+    // ---- 検索処理（fetch経由） ----
     function lookup(receiptId) {
-      google.script.run.withSuccessHandler(showResult).withFailureHandler(showError).lookupByReceiptId(receiptId);
+      callApi('lookup', { id: receiptId })
+        .then(showResult)
+        .catch(err => showError(err));
     }
 
     function searchByName() {
       const name = document.getElementById('name-input').value.trim();
       if (!name) return;
-      google.script.run.withSuccessHandler(showNameResults).withFailureHandler(showError).lookupByName(name);
+      callApi('lookupName', { name: name })
+        .then(data => showNameResults(data.results))
+        .catch(err => showError(err));
     }
 
     function showNameResults(results) {
@@ -336,17 +348,16 @@
       card.classList.add('show');
     }
 
-    // ---- 受取確定（複数端末の競合を考慮） ----
+    // ---- 受取確定 ----
     function confirmReceive() {
       if (!currentRowIndex) return;
       const btn = document.getElementById('confirm-btn');
       btn.disabled = true;
       btn.innerText = '処理中...';
 
-      google.script.run
-        .withSuccessHandler(handleConfirmResult)
-        .withFailureHandler(showError)
-        .markAsReceived(currentRowIndex, deviceName);
+      callApi('markReceived', { row: currentRowIndex, device: deviceName })
+        .then(handleConfirmResult)
+        .catch(err => showError(err));
     }
 
     function handleConfirmResult(res) {
@@ -361,7 +372,6 @@
         conflictArea.innerHTML = '';
         refreshProgress();
       } else if (res.reason === 'already') {
-        // 他の端末が先に処理していた
         btn.className = 'btn warn';
         btn.disabled = true;
         btn.innerText = '他端末が対応済み';
@@ -383,7 +393,9 @@
       startScanner();
     }
 
-    function showError(err) { alert('エラーが発生しました：' + err.message); }
+    function showError(err) {
+      alert('エラーが発生しました：' + err.message + '\n\nWEB_APP_URLの設定、通信環境をご確認ください。');
+    }
   </script>
 </body>
 </html>
