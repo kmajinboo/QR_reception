@@ -16,115 +16,148 @@
       font-size: 20px;
       text-align: center;
       color: #1F3864;
+      margin-bottom: 8px;
+    }
+    .device-badge {
+      text-align: center;
       margin-bottom: 16px;
     }
-    .tabs {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 16px;
-    }
-    .tab-btn {
-      flex: 1;
-      padding: 12px;
-      border: none;
-      border-radius: 8px;
-      background: #ddd;
-      font-size: 15px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    .tab-btn.active {
-      background: #4472C4;
+    .device-badge span {
+      display: inline-block;
+      background: #1F3864;
       color: white;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: bold;
     }
+    .progress-bar-container {
+      background: #ddd;
+      border-radius: 20px;
+      height: 24px;
+      margin-bottom: 16px;
+      overflow: hidden;
+      position: relative;
+    }
+    .progress-bar-fill {
+      background: #2E7D32;
+      height: 100%;
+      transition: width 0.3s;
+    }
+    .progress-text {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: bold; color: #222;
+    }
+
+    .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+    .tab-btn {
+      flex: 1; padding: 12px; border: none; border-radius: 8px;
+      background: #ddd; font-size: 15px; font-weight: bold; cursor: pointer;
+    }
+    .tab-btn.active { background: #4472C4; color: white; }
     .panel { display: none; }
     .panel.active { display: block; }
 
     #reader {
-      width: 100%;
-      max-width: 400px;
-      margin: 0 auto;
-      border-radius: 12px;
-      overflow: hidden;
-      border: 2px solid #4472C4;
+      width: 100%; max-width: 400px; margin: 0 auto;
+      border-radius: 12px; overflow: hidden; border: 2px solid #4472C4;
     }
 
     .search-box {
-      width: 100%;
-      padding: 14px;
-      font-size: 18px;
-      border: 2px solid #4472C4;
-      border-radius: 8px;
-      margin-bottom: 12px;
+      width: 100%; padding: 14px; font-size: 18px;
+      border: 2px solid #4472C4; border-radius: 8px; margin-bottom: 12px;
     }
     .btn {
-      width: 100%;
-      padding: 14px;
-      font-size: 16px;
-      font-weight: bold;
-      border: none;
-      border-radius: 8px;
-      background: #4472C4;
-      color: white;
-      cursor: pointer;
-      margin-bottom: 8px;
+      width: 100%; padding: 14px; font-size: 16px; font-weight: bold;
+      border: none; border-radius: 8px; background: #4472C4; color: white;
+      cursor: pointer; margin-bottom: 8px;
     }
     .btn.confirm { background: #2E7D32; }
+    .btn.warn { background: #CC4400; }
     .btn:disabled { background: #aaa; }
 
     .result-card {
-      background: white;
-      border-radius: 12px;
-      padding: 20px;
-      margin-top: 16px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      display: none;
+      background: white; border-radius: 12px; padding: 20px; margin-top: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: none;
     }
     .result-card.show { display: block; }
     .result-card.already { border: 3px solid #CC4400; }
     .result-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 8px 0;
-      border-bottom: 1px solid #eee;
-      font-size: 15px;
+      display: flex; justify-content: space-between; padding: 8px 0;
+      border-bottom: 1px solid #eee; font-size: 15px;
     }
     .result-row .label { color: #666; }
     .result-row .value { font-weight: bold; }
     .status-badge {
-      display: inline-block;
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: bold;
-      color: white;
+      display: inline-block; padding: 4px 12px; border-radius: 20px;
+      font-size: 13px; font-weight: bold; color: white;
     }
     .status-badge.received { background: #2E7D32; }
     .status-badge.notyet { background: #CC4400; }
 
-    .message {
-      text-align: center;
-      padding: 20px;
-      font-size: 16px;
-      color: #CC4400;
-      font-weight: bold;
+    .message { text-align: center; padding: 20px; font-size: 16px; color: #CC4400; font-weight: bold; }
+    .conflict-message {
+      background: #FFF3E0; border: 2px solid #CC4400; border-radius: 8px;
+      padding: 14px; margin-top: 12px; font-size: 14px; font-weight: bold; color: #CC4400;
     }
 
     .name-results { margin-top: 12px; }
     .name-result-item {
-      background: white;
-      border-radius: 8px;
-      padding: 12px;
-      margin-bottom: 8px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-      cursor: pointer;
+      background: white; border-radius: 8px; padding: 12px; margin-bottom: 8px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08); cursor: pointer;
     }
     .name-result-item:active { background: #eef4ff; }
+
+    /* 起動時の端末名入力オーバーレイ */
+    #setup-overlay {
+      position: fixed; top:0; left:0; right:0; bottom:0;
+      background: rgba(0,0,0,0.6);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 999;
+    }
+    #setup-overlay.hidden { display: none; }
+    .setup-card {
+      background: white; border-radius: 16px; padding: 28px; width: 85%; max-width: 360px;
+      text-align: center;
+    }
+    .setup-card h2 { font-size: 18px; color: #1F3864; margin-top: 0; }
+    .setup-card input {
+      width: 100%; padding: 14px; font-size: 18px; border: 2px solid #4472C4;
+      border-radius: 8px; margin: 16px 0; text-align: center;
+    }
+    .quick-select { display: flex; gap: 8px; margin-bottom: 12px; }
+    .quick-select button {
+      flex: 1; padding: 10px; border: 2px solid #4472C4; background: white;
+      color: #4472C4; border-radius: 8px; font-weight: bold; cursor: pointer;
+    }
   </style>
 </head>
 <body>
 
+  <!-- 起動時：端末名（担当レーン）を入力 -->
+  <div id="setup-overlay">
+    <div class="setup-card">
+      <h2>受付端末の設定</h2>
+      <p style="font-size:13px;color:#666;">この端末の担当名を選択・入力してください</p>
+      <div class="quick-select">
+        <button onclick="setDeviceName('レーン1')">レーン1</button>
+        <button onclick="setDeviceName('レーン2')">レーン2</button>
+        <button onclick="setDeviceName('レーン3')">レーン3</button>
+      </div>
+      <input type="text" id="device-name-input" placeholder="または自由入力（例：田中）">
+      <button class="btn" onclick="confirmDeviceName()">この端末で受付を開始</button>
+    </div>
+  </div>
+
   <h1>はなせるパントリー 受付システム</h1>
+  <div class="device-badge"><span id="device-label"></span></div>
+
+  <div class="progress-bar-container">
+    <div class="progress-bar-fill" id="progress-fill" style="width:0%;"></div>
+    <div class="progress-text" id="progress-text">読み込み中...</div>
+  </div>
 
   <div class="tabs">
     <button class="tab-btn active" onclick="switchTab('qr')">QR読み取り</button>
@@ -150,6 +183,8 @@
     <div class="result-row"><span class="label">希望時間帯</span><span class="value" id="r-timeslot"></span></div>
     <div class="result-row"><span class="label">受取状況</span><span class="value" id="r-status"></span></div>
 
+    <div id="conflict-area"></div>
+
     <div style="margin-top:16px;">
       <button class="btn confirm" id="confirm-btn" onclick="confirmReceive()">受取済みにする</button>
       <button class="btn" style="background:#888;" onclick="resetView()">閉じる</button>
@@ -161,7 +196,41 @@
     let currentRowIndex = null;
     let html5QrCode = null;
     let scanning = false;
+    let deviceName = '';
 
+    // ---- 起動時：端末名の設定 ----
+    function setDeviceName(name) {
+      document.getElementById('device-name-input').value = name;
+    }
+
+    function confirmDeviceName() {
+      const input = document.getElementById('device-name-input').value.trim();
+      if (!input) {
+        alert('端末名を選択または入力してください');
+        return;
+      }
+      deviceName = input;
+      // セッション内で記憶（同端末のブラウザを閉じても再利用したい場合はlocalStorageを使うが、
+      // 今回は明示的に毎回選ばせる方が受付ミスを防げるため保存しない）
+      document.getElementById('device-label').innerText = '担当：' + deviceName;
+      document.getElementById('setup-overlay').classList.add('hidden');
+      startScanner();
+      refreshProgress();
+      setInterval(refreshProgress, 15000); // 15秒ごとに進捗を自動更新
+    }
+
+    // ---- 進捗表示 ----
+    function refreshProgress() {
+      google.script.run.withSuccessHandler(showProgress).withFailureHandler(()=>{}).getProgress();
+    }
+    function showProgress(p) {
+      const pct = p.total > 0 ? Math.round((p.received / p.total) * 100) : 0;
+      document.getElementById('progress-fill').style.width = pct + '%';
+      document.getElementById('progress-text').innerText =
+        `受取済み ${p.received} / ${p.total} 人（残り ${p.remaining} 人）`;
+    }
+
+    // ---- タブ切替 ----
     function switchTab(tab) {
       document.getElementById('panel-qr').classList.toggle('active', tab === 'qr');
       document.getElementById('panel-name').classList.toggle('active', tab === 'name');
@@ -171,6 +240,7 @@
       if (tab === 'qr') { startScanner(); } else { stopScanner(); }
     }
 
+    // ---- QRスキャナー ----
     function startScanner() {
       if (scanning) return;
       html5QrCode = new Html5Qrcode("reader");
@@ -184,7 +254,7 @@
         } else {
           document.getElementById('qr-message').innerText = 'カメラが見つかりません。名前検索をご利用ください。';
         }
-      }).catch(err => {
+      }).catch(() => {
         document.getElementById('qr-message').innerText = 'カメラへのアクセスが許可されていません。';
       });
     }
@@ -200,8 +270,7 @@
       document.getElementById('qr-message').innerText = '読み取りました：' + decodedText;
       lookup(decodedText);
     }
-
-    function onScanFailure(error) { /* 読み取り失敗は無視 */ }
+    function onScanFailure(error) { /* 無視 */ }
 
     function lookup(receiptId) {
       google.script.run.withSuccessHandler(showResult).withFailureHandler(showError).lookupByReceiptId(receiptId);
@@ -232,6 +301,7 @@
     function showResult(data) {
       const card = document.getElementById('result-card');
       card.classList.remove('already');
+      document.getElementById('conflict-area').innerHTML = '';
 
       if (!data.found && !data.rowIndex) {
         document.getElementById('qr-message').innerText = '該当する申込データが見つかりませんでした。名前検索をお試しください。';
@@ -254,6 +324,10 @@
         card.classList.add('already');
         confirmBtn.disabled = true;
         confirmBtn.innerText = '受取済みです';
+        if (data.device) {
+          document.getElementById('conflict-area').innerHTML =
+            '<div class="conflict-message">対応端末：' + data.device + '</div>';
+        }
       } else {
         statusEl.innerHTML = '<span class="status-badge notyet">未受取</span>';
         confirmBtn.disabled = false;
@@ -262,26 +336,54 @@
       card.classList.add('show');
     }
 
+    // ---- 受取確定（複数端末の競合を考慮） ----
     function confirmReceive() {
       if (!currentRowIndex) return;
-      google.script.run.withSuccessHandler(() => {
+      const btn = document.getElementById('confirm-btn');
+      btn.disabled = true;
+      btn.innerText = '処理中...';
+
+      google.script.run
+        .withSuccessHandler(handleConfirmResult)
+        .withFailureHandler(showError)
+        .markAsReceived(currentRowIndex, deviceName);
+    }
+
+    function handleConfirmResult(res) {
+      const btn = document.getElementById('confirm-btn');
+      const conflictArea = document.getElementById('conflict-area');
+
+      if (res.success) {
         document.getElementById('result-card').classList.add('already');
         document.getElementById('r-status').innerHTML = '<span class="status-badge received">受取済み</span>';
-        document.getElementById('confirm-btn').disabled = true;
-        document.getElementById('confirm-btn').innerText = '記録しました';
-      }).withFailureHandler(showError).markAsReceived(currentRowIndex);
+        btn.disabled = true;
+        btn.innerText = '記録しました（' + deviceName + '）';
+        conflictArea.innerHTML = '';
+        refreshProgress();
+      } else if (res.reason === 'already') {
+        // 他の端末が先に処理していた
+        btn.className = 'btn warn';
+        btn.disabled = true;
+        btn.innerText = '他端末が対応済み';
+        conflictArea.innerHTML = '<div class="conflict-message">⚠️ ' + res.message + '</div>';
+        document.getElementById('r-status').innerHTML = '<span class="status-badge received">受取済み</span>';
+        refreshProgress();
+      } else if (res.reason === 'busy') {
+        btn.disabled = false;
+        btn.innerText = '受取済みにする（再試行）';
+        conflictArea.innerHTML = '<div class="conflict-message">⏳ ' + res.message + '</div>';
+      }
     }
 
     function resetView() {
       document.getElementById('result-card').classList.remove('show');
       document.getElementById('qr-message').innerText = '';
+      document.getElementById('confirm-btn').className = 'btn confirm';
       currentRowIndex = null;
       startScanner();
     }
 
     function showError(err) { alert('エラーが発生しました：' + err.message); }
-
-    window.onload = () => { startScanner(); };
   </script>
 </body>
 </html>
