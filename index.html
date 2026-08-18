@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: "Hiragino Sans", "Meiryo", sans-serif;
+      margin: 0;
+      padding: 16px;
+      background: #f4f6fa;
+      color: #222;
+    }
+    h1 {
+      font-size: 20px;
+      text-align: center;
+      color: #1F3864;
+      margin-bottom: 16px;
+    }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      background: #ddd;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .tab-btn.active {
+      background: #4472C4;
+      color: white;
+    }
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    #reader {
+      width: 100%;
+      max-width: 400px;
+      margin: 0 auto;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 2px solid #4472C4;
+    }
+
+    .search-box {
+      width: 100%;
+      padding: 14px;
+      font-size: 18px;
+      border: 2px solid #4472C4;
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+    .btn {
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      background: #4472C4;
+      color: white;
+      cursor: pointer;
+      margin-bottom: 8px;
+    }
+    .btn.confirm { background: #2E7D32; }
+    .btn:disabled { background: #aaa; }
+
+    .result-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      display: none;
+    }
+    .result-card.show { display: block; }
+    .result-card.already { border: 3px solid #CC4400; }
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #eee;
+      font-size: 15px;
+    }
+    .result-row .label { color: #666; }
+    .result-row .value { font-weight: bold; }
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: bold;
+      color: white;
+    }
+    .status-badge.received { background: #2E7D32; }
+    .status-badge.notyet { background: #CC4400; }
+
+    .message {
+      text-align: center;
+      padding: 20px;
+      font-size: 16px;
+      color: #CC4400;
+      font-weight: bold;
+    }
+
+    .name-results { margin-top: 12px; }
+    .name-result-item {
+      background: white;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 8px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      cursor: pointer;
+    }
+    .name-result-item:active { background: #eef4ff; }
+  </style>
+</head>
+<body>
+
+  <h1>はなせるパントリー 受付システム</h1>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('qr')">QR読み取り</button>
+    <button class="tab-btn" onclick="switchTab('name')">名前で検索</button>
+  </div>
+
+  <div id="panel-qr" class="panel active">
+    <div id="reader"></div>
+    <div id="qr-message" class="message"></div>
+  </div>
+
+  <div id="panel-name" class="panel">
+    <input type="text" id="name-input" class="search-box" placeholder="お名前を入力（部分一致でOK）">
+    <button class="btn" onclick="searchByName()">検索する</button>
+    <div id="name-results" class="name-results"></div>
+  </div>
+
+  <div id="result-card" class="result-card">
+    <div class="result-row"><span class="label">受付ID</span><span class="value" id="r-id"></span></div>
+    <div class="result-row"><span class="label">お名前</span><span class="value" id="r-name"></span></div>
+    <div class="result-row"><span class="label">お子さま</span><span class="value" id="r-children"></span></div>
+    <div class="result-row"><span class="label">世帯構成</span><span class="value" id="r-household"></span></div>
+    <div class="result-row"><span class="label">希望時間帯</span><span class="value" id="r-timeslot"></span></div>
+    <div class="result-row"><span class="label">受取状況</span><span class="value" id="r-status"></span></div>
+
+    <div style="margin-top:16px;">
+      <button class="btn confirm" id="confirm-btn" onclick="confirmReceive()">受取済みにする</button>
+      <button class="btn" style="background:#888;" onclick="resetView()">閉じる</button>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script>
+    let currentRowIndex = null;
+    let html5QrCode = null;
+    let scanning = false;
+
+    function switchTab(tab) {
+      document.getElementById('panel-qr').classList.toggle('active', tab === 'qr');
+      document.getElementById('panel-name').classList.toggle('active', tab === 'name');
+      document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+        btn.classList.toggle('active', (tab === 'qr' && i === 0) || (tab === 'name' && i === 1));
+      });
+      if (tab === 'qr') { startScanner(); } else { stopScanner(); }
+    }
+
+    function startScanner() {
+      if (scanning) return;
+      html5QrCode = new Html5Qrcode("reader");
+      const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+      Html5Qrcode.getCameras().then(cameras => {
+        if (cameras && cameras.length) {
+          const backCamera = cameras.find(c => /back|rear/i.test(c.label)) || cameras[cameras.length - 1];
+          html5QrCode.start(backCamera.id, config, onScanSuccess, onScanFailure);
+          scanning = true;
+        } else {
+          document.getElementById('qr-message').innerText = 'カメラが見つかりません。名前検索をご利用ください。';
+        }
+      }).catch(err => {
+        document.getElementById('qr-message').innerText = 'カメラへのアクセスが許可されていません。';
+      });
+    }
+
+    function stopScanner() {
+      if (html5QrCode && scanning) {
+        html5QrCode.stop().then(() => { scanning = false; }).catch(() => {});
+      }
+    }
+
+    function onScanSuccess(decodedText) {
+      stopScanner();
+      document.getElementById('qr-message').innerText = '読み取りました：' + decodedText;
+      lookup(decodedText);
+    }
+
+    function onScanFailure(error) { /* 読み取り失敗は無視 */ }
+
+    function lookup(receiptId) {
+      google.script.run.withSuccessHandler(showResult).withFailureHandler(showError).lookupByReceiptId(receiptId);
+    }
+
+    function searchByName() {
+      const name = document.getElementById('name-input').value.trim();
+      if (!name) return;
+      google.script.run.withSuccessHandler(showNameResults).withFailureHandler(showError).lookupByName(name);
+    }
+
+    function showNameResults(results) {
+      const container = document.getElementById('name-results');
+      container.innerHTML = '';
+      if (results.length === 0) {
+        container.innerHTML = '<div class="message">該当する申込が見つかりませんでした。</div>';
+        return;
+      }
+      results.forEach(r => {
+        const div = document.createElement('div');
+        div.className = 'name-result-item';
+        div.innerHTML = '<strong>' + r.name + '</strong>（' + r.receiptId + '）　' + (r.status === '受取済み' ? '受取済み' : '未受取');
+        div.onclick = () => showResult(r);
+        container.appendChild(div);
+      });
+    }
+
+    function showResult(data) {
+      const card = document.getElementById('result-card');
+      card.classList.remove('already');
+
+      if (!data.found && !data.rowIndex) {
+        document.getElementById('qr-message').innerText = '該当する申込データが見つかりませんでした。名前検索をお試しください。';
+        card.classList.remove('show');
+        return;
+      }
+
+      currentRowIndex = data.rowIndex;
+      document.getElementById('r-id').innerText = data.receiptId;
+      document.getElementById('r-name').innerText = data.name;
+      document.getElementById('r-children').innerText = data.children;
+      document.getElementById('r-household').innerText = data.household;
+      document.getElementById('r-timeslot').innerText = data.timeslot;
+
+      const statusEl = document.getElementById('r-status');
+      const confirmBtn = document.getElementById('confirm-btn');
+
+      if (data.status === '受取済み') {
+        statusEl.innerHTML = '<span class="status-badge received">受取済み</span>';
+        card.classList.add('already');
+        confirmBtn.disabled = true;
+        confirmBtn.innerText = '受取済みです';
+      } else {
+        statusEl.innerHTML = '<span class="status-badge notyet">未受取</span>';
+        confirmBtn.disabled = false;
+        confirmBtn.innerText = '受取済みにする';
+      }
+      card.classList.add('show');
+    }
+
+    function confirmReceive() {
+      if (!currentRowIndex) return;
+      google.script.run.withSuccessHandler(() => {
+        document.getElementById('result-card').classList.add('already');
+        document.getElementById('r-status').innerHTML = '<span class="status-badge received">受取済み</span>';
+        document.getElementById('confirm-btn').disabled = true;
+        document.getElementById('confirm-btn').innerText = '記録しました';
+      }).withFailureHandler(showError).markAsReceived(currentRowIndex);
+    }
+
+    function resetView() {
+      document.getElementById('result-card').classList.remove('show');
+      document.getElementById('qr-message').innerText = '';
+      currentRowIndex = null;
+      startScanner();
+    }
+
+    function showError(err) { alert('エラーが発生しました：' + err.message); }
+
+    window.onload = () => { startScanner(); };
+  </script>
+</body>
+</html>
