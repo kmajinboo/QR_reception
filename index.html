@@ -133,7 +133,7 @@
     </div>
   </div>
 
-  <h1>はなせるパントリー 受付システム</h1>
+  <h1 id="page-title">はなせるパントリー 受付システム</h1>
   <div class="device-badge"><span id="device-label"></span></div>
 
   <div class="progress-bar-container">
@@ -178,10 +178,22 @@
     // ============================================================
     // ★★★ 必ず設定してください ★★★
     // Apps Scriptの「デプロイ」→「デプロイを管理」で発行された
-    // ウェブアプリのURL（/exec で終わるもの）をここに貼り付けてください。
+    // ウェブアプリのURL（/exec で終わるもの）は3事業所共通です。
+    // OFFICE_KEYだけ、事業所ごとに変更してください
+    // （Code.gsのOFFICES配列に設定したkeyと一致させること）。
     // ============================================================
     const WEB_APP_URL = 'https://script.google.com/a/macros/willwork.jp/s/AKfycbwXl5IWu4_KlrAEBzsYa3IKaVUrB3QDII5iCewSaUbo6554XCy8y6_Ztz42ibn5z8goiw/exec';
+    const OFFICE_KEY = 'otofuke'; // 例：音更町なら 'otofuke' / 美瑛町なら 'biei' / 増毛町なら 'mashike'
     // ============================================================
+    
+    // 画面表示用の事業所名（表示だけの用途。実際の判定はOFFICE_KEYで行う）
+    const OFFICE_DISPLAY_NAMES = {
+      otofuke: '音更町',
+      biei: '美瑛町',
+      mashike: '増毛町',
+    };
+    document.getElementById('page-title').innerText =
+      (OFFICE_DISPLAY_NAMES[OFFICE_KEY] || OFFICE_KEY) + ' はなせるパントリー 受付システム';
 
     let currentRowIndex = null;
     let html5QrCode = null;
@@ -193,10 +205,11 @@
       document.getElementById('config-warning').style.display = 'block';
     }
 
-    // ---- APIリクエスト共通関数（fetchベース） ----
+    // ---- APIリクエスト共通関数（fetchベース、officeを自動付与） ----
     async function callApi(action, params) {
       const url = new URL(WEB_APP_URL);
       url.searchParams.set('action', action);
+      url.searchParams.set('office', OFFICE_KEY);
       Object.keys(params || {}).forEach(key => {
         url.searchParams.set(key, params[key]);
       });
