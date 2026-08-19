@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>はなせるパントリー 受付システム</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: "Hiragino Sans", "Meiryo", sans-serif;
+      margin: 0;
+      padding: 16px;
+      background: #f4f6fa;
+      color: #222;
+    }
+    h1 {
+      font-size: 20px;
+      text-align: center;
+      color: #1F3864;
+      margin-bottom: 8px;
+    }
+    .device-badge { text-align: center; margin-bottom: 16px; }
+    .device-badge span {
+      display: inline-block; background: #1F3864; color: white;
+      padding: 6px 16px; border-radius: 20px; font-size: 14px; font-weight: bold;
+    }
+    .progress-bar-container {
+      background: #ddd; border-radius: 20px; height: 24px;
+      margin-bottom: 16px; overflow: hidden; position: relative;
+    }
+    .progress-bar-fill { background: #2E7D32; height: 100%; transition: width 0.3s; }
+    .progress-text {
+      position: absolute; top:0; left:0; right:0; bottom:0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: bold; color: #222;
+    }
+    .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+    .tab-btn {
+      flex: 1; padding: 12px; border: none; border-radius: 8px;
+      background: #ddd; font-size: 15px; font-weight: bold; cursor: pointer;
+    }
+    .tab-btn.active { background: #4472C4; color: white; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    #reader {
+      width: 100%; max-width: 400px; margin: 0 auto;
+      border-radius: 12px; overflow: hidden; border: 2px solid #4472C4;
+    }
+    .search-box {
+      width: 100%; padding: 14px; font-size: 18px;
+      border: 2px solid #4472C4; border-radius: 8px; margin-bottom: 12px;
+    }
+    .btn {
+      width: 100%; padding: 14px; font-size: 16px; font-weight: bold;
+      border: none; border-radius: 8px; background: #4472C4; color: white;
+      cursor: pointer; margin-bottom: 8px;
+    }
+    .btn.confirm { background: #2E7D32; }
+    .btn.warn { background: #CC4400; }
+    .btn:disabled { background: #aaa; }
+    .result-card {
+      background: white; border-radius: 12px; padding: 20px; margin-top: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: none;
+    }
+    .result-card.show { display: block; }
+    .result-card.already { border: 3px solid #CC4400; }
+    .result-row {
+      display: flex; justify-content: space-between; padding: 8px 0;
+      border-bottom: 1px solid #eee; font-size: 15px;
+    }
+    .result-row .label { color: #666; }
+    .result-row .value { font-weight: bold; }
+    .status-badge {
+      display: inline-block; padding: 4px 12px; border-radius: 20px;
+      font-size: 13px; font-weight: bold; color: white;
+    }
+    .status-badge.received { background: #2E7D32; }
+    .status-badge.notyet { background: #CC4400; }
+    .message { text-align: center; padding: 20px; font-size: 16px; color: #CC4400; font-weight: bold; }
+    .conflict-message {
+      background: #FFF3E0; border: 2px solid #CC4400; border-radius: 8px;
+      padding: 14px; margin-top: 12px; font-size: 14px; font-weight: bold; color: #CC4400;
+    }
+    .name-results { margin-top: 12px; }
+    .name-result-item {
+      background: white; border-radius: 8px; padding: 12px; margin-bottom: 8px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08); cursor: pointer;
+    }
+    .name-result-item:active { background: #eef4ff; }
+    #setup-overlay {
+      position: fixed; top:0; left:0; right:0; bottom:0;
+      background: rgba(0,0,0,0.6);
+      display: flex; align-items: center; justify-content: center; z-index: 999;
+    }
+    #setup-overlay.hidden { display: none; }
+    .setup-card {
+      background: white; border-radius: 16px; padding: 28px; width: 85%; max-width: 360px; text-align: center;
+    }
+    .setup-card h2 { font-size: 18px; color: #1F3864; margin-top: 0; }
+    .setup-card input {
+      width: 100%; padding: 14px; font-size: 18px; border: 2px solid #4472C4;
+      border-radius: 8px; margin: 16px 0; text-align: center;
+    }
+    .quick-select { display: flex; gap: 8px; margin-bottom: 12px; }
+    .quick-select button {
+      flex: 1; padding: 10px; border: 2px solid #4472C4; background: white;
+      color: #4472C4; border-radius: 8px; font-weight: bold; cursor: pointer;
+    }
+    #config-warning {
+      background: #FFF3E0; border: 2px solid #CC4400; color: #CC4400;
+      padding: 12px; border-radius: 8px; margin-bottom: 12px; font-size: 13px; display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="config-warning">
+    ⚠️ WEB_APP_URLが設定されていません。このファイル内の
+    <code>const WEB_APP_URL = '...'</code> に、Apps ScriptのデプロイURL（/execで終わるもの）を設定してください。
+  </div>
+
+  <div id="setup-overlay">
+    <div class="setup-card">
+      <h2>受付端末の設定</h2>
+      <p style="font-size:13px;color:#666;">この端末の担当名を選択・入力してください</p>
+      <div class="quick-select">
+        <button onclick="setDeviceName('レーン1')">レーン1</button>
+        <button onclick="setDeviceName('レーン2')">レーン2</button>
+        <button onclick="setDeviceName('レーン3')">レーン3</button>
+      </div>
+      <input type="text" id="device-name-input" placeholder="または自由入力（例：田中）">
+      <button class="btn" onclick="confirmDeviceName()">この端末で受付を開始</button>
+    </div>
+  </div>
+
+  <h1 id="page-title">はなせるパントリー 受付システム</h1>
+  <div class="device-badge"><span id="device-label"></span></div>
+
+  <div class="progress-bar-container">
+    <div class="progress-bar-fill" id="progress-fill" style="width:0%;"></div>
+    <div class="progress-text" id="progress-text">読み込み中...</div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('qr')">QR読み取り</button>
+    <button class="tab-btn" onclick="switchTab('name')">名前で検索</button>
+  </div>
+
+  <div id="panel-qr" class="panel active">
+    <div id="reader"></div>
+    <div id="qr-message" class="message"></div>
+  </div>
+
+  <div id="panel-name" class="panel">
+    <input type="text" id="name-input" class="search-box" placeholder="お名前を入力（部分一致でOK）">
+    <button class="btn" onclick="searchByName()">検索する</button>
+    <div id="name-results" class="name-results"></div>
+  </div>
+
+  <div id="result-card" class="result-card">
+    <div class="result-row"><span class="label">受付ID</span><span class="value" id="r-id"></span></div>
+    <div class="result-row"><span class="label">お名前</span><span class="value" id="r-name"></span></div>
+    <div class="result-row"><span class="label">お子さま</span><span class="value" id="r-children"></span></div>
+    <div class="result-row"><span class="label">世帯構成</span><span class="value" id="r-household"></span></div>
+    <div class="result-row"><span class="label">希望時間帯</span><span class="value" id="r-timeslot"></span></div>
+    <div class="result-row"><span class="label">受取状況</span><span class="value" id="r-status"></span></div>
+
+    <div id="conflict-area"></div>
+
+    <div style="margin-top:16px;">
+      <button class="btn confirm" id="confirm-btn" onclick="confirmReceive()">受取済みにする</button>
+      <button class="btn" style="background:#888;" onclick="resetView()">閉じる</button>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script>
+    // ============================================================
+    // ★★★ 必ず設定してください ★★★
+    // Apps Scriptの「デプロイ」→「デプロイを管理」で発行された
+    // ウェブアプリのURL（/exec で終わるもの）は3事業所共通です。
+    // OFFICE_KEYだけ、事業所ごとに変更してください
+    // （Code.gsのOFFICES配列に設定したkeyと一致させること）。
+    // ============================================================
+    const WEB_APP_URL = 'ここにデプロイURL（/execで終わるもの）を貼り付け（3事業所共通）';
+    const OFFICE_KEY = 'otofuke'; // 例：音更町なら 'otofuke' / 美瑛町なら 'biei' / 増毛町なら 'mashike'
+    // ============================================================
+
+    // 画面表示用の事業所名（表示だけの用途。実際の判定はOFFICE_KEYで行う）
+    const OFFICE_DISPLAY_NAMES = {
+      otofuke: '音更町',
+      biei: '美瑛町',
+      mashike: '増毛町',
+    };
+    document.getElementById('page-title').innerText =
+      (OFFICE_DISPLAY_NAMES[OFFICE_KEY] || OFFICE_KEY) + ' はなせるパントリー 受付システム';
+
+    let currentRowIndex = null;
+    let html5QrCode = null;
+    let scanning = false;
+    let deviceName = '';
+
+    // 設定チェック
+    if (!WEB_APP_URL || WEB_APP_URL.indexOf('ここに') === 0 || WEB_APP_URL.indexOf('script.google.com') === -1) {
+      document.getElementById('config-warning').style.display = 'block';
+    }
+
+    // ---- APIリクエスト共通関数（fetchベース、officeを自動付与） ----
+    async function callApi(action, params) {
+      const url = new URL(WEB_APP_URL);
+      url.searchParams.set('action', action);
+      url.searchParams.set('office', OFFICE_KEY);
+      Object.keys(params || {}).forEach(key => {
+        url.searchParams.set(key, params[key]);
+      });
+      const res = await fetch(url.toString());
+      if (!res.ok) {
+        throw new Error('サーバーエラー（HTTP ' + res.status + '）');
+      }
+      const data = await res.json();
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      return data;
+    }
+
+    // ---- 起動時：端末名の設定 ----
+    function setDeviceName(name) {
+      document.getElementById('device-name-input').value = name;
+    }
+
+    function confirmDeviceName() {
+      const input = document.getElementById('device-name-input').value.trim();
+      if (!input) { alert('端末名を選択または入力してください'); return; }
+      deviceName = input;
+      document.getElementById('device-label').innerText = '担当：' + deviceName;
+      document.getElementById('setup-overlay').classList.add('hidden');
+      startScanner();
+      refreshProgress();
+      setInterval(refreshProgress, 15000);
+    }
+
+    // ---- 進捗表示 ----
+    function refreshProgress() {
+      callApi('progress').then(showProgress).catch(() => {});
+    }
+    function showProgress(p) {
+      const pct = p.total > 0 ? Math.round((p.received / p.total) * 100) : 0;
+      document.getElementById('progress-fill').style.width = pct + '%';
+      document.getElementById('progress-text').innerText =
+        `受取済み ${p.received} / ${p.total} 人（残り ${p.remaining} 人）`;
+    }
+
+    // ---- タブ切替 ----
+    function switchTab(tab) {
+      document.getElementById('panel-qr').classList.toggle('active', tab === 'qr');
+      document.getElementById('panel-name').classList.toggle('active', tab === 'name');
+      document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+        btn.classList.toggle('active', (tab === 'qr' && i === 0) || (tab === 'name' && i === 1));
+      });
+      if (tab === 'qr') { startScanner(); } else { stopScanner(); }
+    }
+
+    // ---- QRスキャナー ----
+    function startScanner() {
+      if (scanning) return;
+      html5QrCode = new Html5Qrcode("reader");
+      const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+      Html5Qrcode.getCameras().then(cameras => {
+        if (cameras && cameras.length) {
+          const backCamera = cameras.find(c => /back|rear/i.test(c.label)) || cameras[cameras.length - 1];
+          html5QrCode.start(backCamera.id, config, onScanSuccess, onScanFailure);
+          scanning = true;
+        } else {
+          document.getElementById('qr-message').innerText = 'カメラが見つかりません。名前検索をご利用ください。';
+        }
+      }).catch(() => {
+        document.getElementById('qr-message').innerText = 'カメラへのアクセスが許可されていません。';
+      });
+    }
+
+    function stopScanner() {
+      if (html5QrCode && scanning) {
+        html5QrCode.stop().then(() => { scanning = false; }).catch(() => {});
+      }
+    }
+
+    function onScanSuccess(decodedText) {
+      stopScanner();
+      document.getElementById('qr-message').innerText = '読み取りました：' + decodedText;
+      lookup(decodedText);
+    }
+    function onScanFailure(error) { /* 無視 */ }
+
+    // ---- 検索処理（fetch経由） ----
+    function lookup(receiptId) {
+      callApi('lookup', { id: receiptId })
+        .then(showResult)
+        .catch(err => showError(err));
+    }
+
+    function searchByName() {
+      const name = document.getElementById('name-input').value.trim();
+      if (!name) return;
+      callApi('lookupName', { name: name })
+        .then(data => showNameResults(data.results))
+        .catch(err => showError(err));
+    }
+
+    function showNameResults(results) {
+      const container = document.getElementById('name-results');
+      container.innerHTML = '';
+      if (results.length === 0) {
+        container.innerHTML = '<div class="message">該当する申込が見つかりませんでした。</div>';
+        return;
+      }
+      results.forEach(r => {
+        const div = document.createElement('div');
+        div.className = 'name-result-item';
+        div.innerHTML = '<strong>' + r.name + '</strong>（' + r.receiptId + '）　' + (r.status === '受取済み' ? '受取済み' : '未受取');
+        div.onclick = () => showResult(r);
+        container.appendChild(div);
+      });
+    }
+
+    function showResult(data) {
+      const card = document.getElementById('result-card');
+      card.classList.remove('already');
+      document.getElementById('conflict-area').innerHTML = '';
+
+      if (!data.found && !data.rowIndex) {
+        document.getElementById('qr-message').innerText = '該当する申込データが見つかりませんでした。名前検索をお試しください。';
+        card.classList.remove('show');
+        return;
+      }
+
+      currentRowIndex = data.rowIndex;
+      document.getElementById('r-id').innerText = data.receiptId;
+      document.getElementById('r-name').innerText = data.name;
+      document.getElementById('r-children').innerText = data.children;
+      document.getElementById('r-household').innerText = data.household;
+      document.getElementById('r-timeslot').innerText = data.timeslot;
+
+      const statusEl = document.getElementById('r-status');
+      const confirmBtn = document.getElementById('confirm-btn');
+
+      if (data.status === '受取済み') {
+        statusEl.innerHTML = '<span class="status-badge received">受取済み</span>';
+        card.classList.add('already');
+        confirmBtn.disabled = true;
+        confirmBtn.innerText = '受取済みです';
+        if (data.device) {
+          document.getElementById('conflict-area').innerHTML =
+            '<div class="conflict-message">対応端末：' + data.device + '</div>';
+        }
+      } else {
+        statusEl.innerHTML = '<span class="status-badge notyet">未受取</span>';
+        confirmBtn.disabled = false;
+        confirmBtn.innerText = '受取済みにする';
+      }
+      card.classList.add('show');
+    }
+
+    // ---- 受取確定 ----
+    function confirmReceive() {
+      if (!currentRowIndex) return;
+      const btn = document.getElementById('confirm-btn');
+      btn.disabled = true;
+      btn.innerText = '処理中...';
+
+      callApi('markReceived', { row: currentRowIndex, device: deviceName })
+        .then(handleConfirmResult)
+        .catch(err => showError(err));
+    }
+
+    function handleConfirmResult(res) {
+      const btn = document.getElementById('confirm-btn');
+      const conflictArea = document.getElementById('conflict-area');
+
+      if (res.success) {
+        document.getElementById('result-card').classList.add('already');
+        document.getElementById('r-status').innerHTML = '<span class="status-badge received">受取済み</span>';
+        btn.disabled = true;
+        btn.innerText = '記録しました（' + deviceName + '）';
+        conflictArea.innerHTML = '';
+        refreshProgress();
+      } else if (res.reason === 'already') {
+        btn.className = 'btn warn';
+        btn.disabled = true;
+        btn.innerText = '他端末が対応済み';
+        conflictArea.innerHTML = '<div class="conflict-message">⚠️ ' + res.message + '</div>';
+        document.getElementById('r-status').innerHTML = '<span class="status-badge received">受取済み</span>';
+        refreshProgress();
+      } else if (res.reason === 'busy') {
+        btn.disabled = false;
+        btn.innerText = '受取済みにする（再試行）';
+        conflictArea.innerHTML = '<div class="conflict-message">⏳ ' + res.message + '</div>';
+      }
+    }
+
+    function resetView() {
+      document.getElementById('result-card').classList.remove('show');
+      document.getElementById('qr-message').innerText = '';
+      document.getElementById('confirm-btn').className = 'btn confirm';
+      currentRowIndex = null;
+      startScanner();
+    }
+
+    function showError(err) {
+      alert('エラーが発生しました：' + err.message + '\n\nWEB_APP_URLの設定、通信環境をご確認ください。');
+    }
+  </script>
+</body>
+</html>
