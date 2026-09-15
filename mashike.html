@@ -162,7 +162,6 @@
     <div class="result-row"><span class="label">お名前</span><span class="value" id="r-name"></span></div>
     <div class="result-row"><span class="label">お子さま</span><span class="value" id="r-children"></span></div>
     <div class="result-row"><span class="label">世帯構成</span><span class="value" id="r-household"></span></div>
-    <div class="result-row"><span class="label">希望時間帯</span><span class="value" id="r-timeslot"></span></div>
     <div class="result-row"><span class="label">受取状況</span><span class="value" id="r-status"></span></div>
 
     <div id="conflict-area"></div>
@@ -183,7 +182,7 @@
     // （Code.gsのOFFICES配列に設定したkeyと一致させること）。
     // ============================================================
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbz0XeF4giZiVxHNJJUTHZa6Mg3LrA77tXI3p0D4EU7HTTIcouyDEVTvJm2wEZrn5pjFtw/exec';
-    const OFFICE_KEY = 'otofuke'; // 例：音更町なら 'otofuke' / 美瑛町なら 'biei' / 増毛町なら 'mashike'
+    const OFFICE_KEY = 'mashike'; // 例：音更町なら 'otofuke' / 美瑛町なら 'biei' / 増毛町なら 'mashike'
     // ============================================================
 
     // 画面表示用の事業所名（表示だけの用途。実際の判定はOFFICE_KEYで行う）
@@ -339,7 +338,6 @@
       document.getElementById('r-name').innerText = data.name;
       document.getElementById('r-children').innerText = data.children;
       document.getElementById('r-household').innerText = data.household;
-      document.getElementById('r-timeslot').innerText = data.timeslot;
 
       const statusEl = document.getElementById('r-status');
       const confirmBtn = document.getElementById('confirm-btn');
