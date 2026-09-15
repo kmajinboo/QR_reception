@@ -183,7 +183,7 @@
     // （Code.gsのOFFICES配列に設定したkeyと一致させること）。
     // ============================================================
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbz0XeF4giZiVxHNJJUTHZa6Mg3LrA77tXI3p0D4EU7HTTIcouyDEVTvJm2wEZrn5pjFtw/exec';
-    const OFFICE_KEY = 'biei'; // 例：音更町なら 'otofuke' / 美瑛町なら 'biei' / 増毛町なら 'mashike'
+    const OFFICE_KEY = 'otofuke'; // 例：音更町なら 'otofuke' / 美瑛町なら 'biei' / 増毛町なら 'mashike'
     // ============================================================
 
     // 画面表示用の事業所名（表示だけの用途。実際の判定はOFFICE_KEYで行う）
@@ -205,49 +205,23 @@
       document.getElementById('config-warning').style.display = 'block';
     }
 
-    // ---- APIリクエスト共通関数（JSONP方式） ----
-    // fetch()はクロスドメイン環境でGoogle側のリダイレクト処理と
-    // 相性が悪く、不安定になることがあるため、<script>タグを動的に
-    // 生成してデータを取得するJSONP方式を採用している。
-    function callApi(action, params) {
-      return new Promise((resolve, reject) => {
-        const callbackName = 'cb_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
-        const url = new URL(WEB_APP_URL);
-        url.searchParams.set('action', action);
-        url.searchParams.set('office', OFFICE_KEY);
-        url.searchParams.set('callback', callbackName);
-        Object.keys(params || {}).forEach(key => {
-          url.searchParams.set(key, params[key]);
-        });
-
-        const timeoutId = setTimeout(() => {
-          cleanup();
-          reject(new Error('タイムアウトしました（15秒）。通信環境をご確認ください。'));
-        }, 15000);
-
-        function cleanup() {
-          clearTimeout(timeoutId);
-          delete window[callbackName];
-          if (script.parentNode) script.parentNode.removeChild(script);
-        }
-
-        window[callbackName] = function(data) {
-          cleanup();
-          if (data && data.error) {
-            reject(new Error(data.error));
-          } else {
-            resolve(data);
-          }
-        };
-
-        const script = document.createElement('script');
-        script.src = url.toString();
-        script.onerror = function() {
-          cleanup();
-          reject(new Error('スクリプトの読み込みに失敗しました。通信環境をご確認ください。'));
-        };
-        document.body.appendChild(script);
+    // ---- APIリクエスト共通関数（fetchベース、officeを自動付与） ----
+    async function callApi(action, params) {
+      const url = new URL(WEB_APP_URL);
+      url.searchParams.set('action', action);
+      url.searchParams.set('office', OFFICE_KEY);
+      Object.keys(params || {}).forEach(key => {
+        url.searchParams.set(key, params[key]);
       });
+      const res = await fetch(url.toString());
+      if (!res.ok) {
+        throw new Error('サーバーエラー（HTTP ' + res.status + '）');
+      }
+      const data = await res.json();
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      return data;
     }
 
     // ---- 起動時：端末名の設定 ----
