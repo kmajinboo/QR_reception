@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>申込受付終了｜はなせるパントリー</title>
+<style>
+  body {
+    margin: 0;
+    padding: 24px 16px;
+    font-family: "Meiryo UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: #F9FAFC;
+    color: #222;
+    line-height: 1.8;
+  }
+  .card {
+    max-width: 640px;
+    margin: 32px auto;
+    background: #fff;
+    border-top: 8px solid #1E3A5F;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.12);
+    padding: 32px 24px;
+    text-align: center;
+  }
+  .event { font-size: 1.25rem; color: #2E5FAD; font-weight: bold; margin: 0 0 12px; }
+  h1 { font-size: 2.4rem; color: #1E3A5F; margin: 0 0 20px; }
+  p { font-size: 1.35rem; margin: 0 0 16px; }
+  .contact {
+    margin-top: 28px;
+    padding: 16px;
+    background: #FFF3CD;
+    border-left: 8px solid #FFC107;
+    text-align: left;
+    font-size: 1.15rem;
+    white-space: pre-wrap;
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <p class="event" id="event">はなせるパントリー</p>
+  <h1>申込の受付は<br>終了しました</h1>
+  <p>定員に達したため、申込の受付を終了しました。<br>たくさんのご応募をありがとうございました。</p>
+  <div class="contact" id="contact" hidden></div>
+</div>
+
+<script>
+  // ▼ 事業所ごとの表示名・問合せ先（URLの末尾に ?office=otofuke のように付けて使う）
+  const OFFICES = {
+    otofuke: {
+      name: '音更町 はなせるパントリー',
+      contact: '【お問い合わせ】\n音更町 生活あんしんセンター\n（電話番号などをここに入力）'
+    },
+    biei: {
+      name: '美瑛町 はなせるパントリー',
+      contact: '【お問い合わせ】\n美瑛町 生活あんしんセンター\n（電話番号などをここに入力）'
+    },
+    mashike: {
+      name: '増毛町 はなせるパントリー',
+      contact: '【お問い合わせ】\n増毛町 生活あんしんセンター\n（電話番号などをここに入力）'
+    }
+  };
+
+  const key = new URLSearchParams(location.search).get('office');
+  const office = OFFICES[key];
+  if (office) {
+    document.getElementById('event').textContent = office.name;
+    const c = document.getElementById('contact');
+    c.textContent = office.contact;
+    c.hidden = false;
+  }
+</script>
+</body>
+</html>
