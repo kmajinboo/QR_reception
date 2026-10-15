@@ -81,6 +81,15 @@
       background: #FFF3E0; border: 2px solid #CC4400; border-radius: 8px;
       padding: 14px; margin-top: 12px; font-size: 14px; font-weight: bold; color: #CC4400;
     }
+    .staff-call {
+      background: #C62828; color: white; border-radius: 8px;
+      padding: 16px; margin-bottom: 14px; text-align: center;
+    }
+    .staff-call .big { font-size: 24px; font-weight: bold; }
+    .staff-call .note { font-size: 15px; margin-top: 6px; }
+    .staff-call .related { background: white; color: #333; border-radius: 6px; padding: 8px 10px; margin-top: 10px; font-size: 14px; text-align: left; }
+    .name-result-item.has-note { border-left: 6px solid #C62828; }
+    .name-results .alert-mark { color: #C62828; font-weight: bold; }
     .name-results { margin-top: 12px; }
     .name-result-item {
       background: white; border-radius: 8px; padding: 12px; margin-bottom: 8px;
@@ -158,6 +167,7 @@
   </div>
 
   <div id="result-card" class="result-card">
+    <div id="staff-call-area"></div>
     <div class="result-row"><span class="label">受付ID</span><span class="value" id="r-id"></span></div>
     <div class="result-row"><span class="label">お名前</span><span class="value" id="r-name"></span></div>
     <div class="result-row"><span class="label">お子さま</span><span class="value" id="r-children"></span></div>
@@ -195,6 +205,14 @@
       (OFFICE_DISPLAY_NAMES[OFFICE_KEY] || OFFICE_KEY) + ' はなせるパントリー 受付システム';
 
     let currentRowIndex = null;
+
+    let currentNote = '';
+
+    function escapeHtml(v) {
+
+      return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+    }
     let html5QrCode = null;
     let scanning = false;
     let deviceName = '';
@@ -315,8 +333,9 @@
       }
       results.forEach(r => {
         const div = document.createElement('div');
-        div.className = 'name-result-item';
-        div.innerHTML = '<strong>' + r.name + '</strong>（' + r.receiptId + '）　' + (r.status === '受取済み' ? '受取済み' : '未受取');
+        div.className = 'name-result-item' + (r.note ? ' has-note' : '');
+        div.innerHTML = (r.note ? '<span class="alert-mark">⚠ 担当者をお呼びください　</span>' : '')
+          + '<strong>' + escapeHtml(r.name) + '</strong>（' + r.receiptId + '）　' + (r.status === '受取済み' ? '受取済み' : '未受取');
         div.onclick = () => showResult(r);
         container.appendChild(div);
       });
@@ -326,6 +345,8 @@
       const card = document.getElementById('result-card');
       card.classList.remove('already');
       document.getElementById('conflict-area').innerHTML = '';
+      document.getElementById('staff-call-area').innerHTML = '';
+      currentNote = '';
 
       if (!data.found && !data.rowIndex) {
         document.getElementById('qr-message').innerText = '該当する申込データが見つかりませんでした。名前検索をお試しください。';
@@ -334,6 +355,20 @@
       }
 
       currentRowIndex = data.rowIndex;
+      currentNote = data.note || '';
+      if (currentNote) {
+        let html = '<div class="staff-call"><div class="big">⚠ 担当者をお呼びください</div>'
+          + '<div class="note">' + escapeHtml(currentNote) + '</div>';
+        const rel = data.related || [];
+        if (rel.length > 0) {
+          html += '<div class="related"><strong>同じ方の可能性がある別の申込：</strong><br>'
+            + rel.map(x => escapeHtml(x.name) + '（' + (x.receiptId || 'ID未発行') + '）：' + escapeHtml(x.status)
+              + '<br>　お子さま：' + escapeHtml(x.children) + '／世帯構成：' + escapeHtml(x.household)).join('<hr style="margin:6px 0;">')
+            + '</div>';
+        }
+        html += '</div>';
+        document.getElementById('staff-call-area').innerHTML = html;
+      }
       document.getElementById('r-id').innerText = data.receiptId;
       document.getElementById('r-name').innerText = data.name;
       document.getElementById('r-children').innerText = data.children;
@@ -362,6 +397,7 @@
     // ---- 受取確定 ----
     function confirmReceive() {
       if (!currentRowIndex) return;
+      if (currentNote && !confirm('担当者の確認は済みましたか？\n\n「' + currentNote + '」\n\n確認済みの場合のみ「OK」を押してください。')) return;
       const btn = document.getElementById('confirm-btn');
       btn.disabled = true;
       btn.innerText = '処理中...';
@@ -401,6 +437,8 @@
       document.getElementById('qr-message').innerText = '';
       document.getElementById('confirm-btn').className = 'btn confirm';
       currentRowIndex = null;
+      currentNote = '';
+      document.getElementById('staff-call-area').innerHTML = '';
       startScanner();
     }
 
