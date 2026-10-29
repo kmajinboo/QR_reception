@@ -171,6 +171,7 @@
     <div class="result-row"><span class="label">受付ID</span><span class="value" id="r-id"></span></div>
     <div class="result-row"><span class="label">お名前</span><span class="value" id="r-name"></span></div>
     <div class="result-row"><span class="label">お子さま</span><span class="value" id="r-children"></span></div>
+    <div class="result-row"><span class="label">電話番号</span><span class="value" id="r-phone"></span></div>
     <div class="result-row"><span class="label">世帯構成</span><span class="value" id="r-household"></span></div>
     <div class="result-row"><span class="label">受取状況</span><span class="value" id="r-status"></span></div>
 
@@ -363,7 +364,7 @@
         if (rel.length > 0) {
           html += '<div class="related"><strong>同じ方の可能性がある別の申込：</strong><br>'
             + rel.map(x => escapeHtml(x.name) + '（' + (x.receiptId || 'ID未発行') + '）：' + escapeHtml(x.status)
-              + '<br>　お子さま：' + escapeHtml(x.children) + '／世帯構成：' + escapeHtml(x.household)).join('<hr style="margin:6px 0;">')
+              + '<br>　お子さま：' + escapeHtml(x.children) + '／電話：' + escapeHtml(x.phone || '') + '／世帯構成：' + escapeHtml(x.household)).join('<hr style="margin:6px 0;">')
             + '</div>';
         }
         html += '</div>';
@@ -372,6 +373,7 @@
       document.getElementById('r-id').innerText = data.receiptId;
       document.getElementById('r-name').innerText = data.name;
       document.getElementById('r-children').innerText = data.children;
+      document.getElementById('r-phone').innerText = data.phone || '';
       document.getElementById('r-household').innerText = data.household;
 
       const statusEl = document.getElementById('r-status');
