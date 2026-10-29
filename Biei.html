@@ -171,7 +171,7 @@
     <div class="result-row"><span class="label">受付ID</span><span class="value" id="r-id"></span></div>
     <div class="result-row"><span class="label">お名前</span><span class="value" id="r-name"></span></div>
     <div class="result-row"><span class="label">お子さま</span><span class="value" id="r-children"></span></div>
-    <div class="result-row"><span class="label">世帯構成</span><span class="value" id="r-household"></span></div>
+    <div class="result-row"><span class="label">受取希望の時間帯</span><span class="value" id="r-household"></span></div>
     <div class="result-row"><span class="label">受取状況</span><span class="value" id="r-status"></span></div>
 
     <div id="conflict-area"></div>
@@ -363,7 +363,7 @@
         if (rel.length > 0) {
           html += '<div class="related"><strong>同じ方の可能性がある別の申込：</strong><br>'
             + rel.map(x => escapeHtml(x.name) + '（' + (x.receiptId || 'ID未発行') + '）：' + escapeHtml(x.status)
-              + '<br>　お子さま：' + escapeHtml(x.children) + '／世帯構成：' + escapeHtml(x.household)).join('<hr style="margin:6px 0;">')
+              + '<br>　お子さま：' + escapeHtml(x.children) + '／受取希望の時間帯：' + escapeHtml(x.household)).join('<hr style="margin:6px 0;">')
             + '</div>';
         }
         html += '</div>';
