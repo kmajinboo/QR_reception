@@ -336,7 +336,7 @@
         const div = document.createElement('div');
         div.className = 'name-result-item' + (r.note ? ' has-note' : '');
         div.innerHTML = (r.note ? '<span class="alert-mark">⚠ 担当者をお呼びください　</span>' : '')
-          + '<strong>' + escapeHtml(r.name) + '</strong>（' + r.receiptId + '）　' + (r.status === '受取済み' ? '受取済み' : '未受取');
+          + '<strong>' + escapeHtml(r.name) + '</strong>（' + r.receiptId + '）　' + (r.phone ? '☎ ' + escapeHtml(r.phone) + '　' : '') + (r.status === '受取済み' ? '受取済み' : '未受取');
         div.onclick = () => showResult(r);
         container.appendChild(div);
       });
